@@ -1,21 +1,30 @@
-import discord, time, datetime, psutil
+import discord, time, psutil, sys, traceback, logging, coloredlogs
 from discord.ext import commands
 from colorama import Fore
 from psutil._common import bytes2human
-
-status = discord.Activity(type=discord.ActivityType.watching, name="Coming Soon!")
-
-intents = discord.Intents.default()
-
+import src.utilities as utilities
+#create bot status
+status = discord.Activity(type=discord.ActivityType.watching, name=f"Coming Soon!")
+#intents
+intents = discord.Intents().default()
 intents.message_content = True
-
-bot = discord.Bot(description="The bot that runs the AllDayChess Discord!", activity=status, debug_guilds=[846192394214965268, 796157315174498324], intents=intents)
-
+intents.members = True
+#accent color of bot
 color=0xCBC395
-
+#bot version
 version = "v1.0"
-
+#bot process
 process = psutil.Process()
+#create bot
+bot = discord.Bot(description="The bot that runs the AllDayChess Discord!", activity=status, debug_guilds=[846192394214965268], intents=intents)
+
+#Logging setup
+coloredlogs.install(level="INFO", fmt="%(asctime)s %(name)s[%(process)d] %(levelname)s %(message)s")
+logger = logging.getLogger("AllDayChess")
+file_handler = logging.FileHandler("SEVERE.log")
+file_handler.setLevel(logging.ERROR)
+file_handler.setFormatter(logging.Formatter(fmt="%(asctime)s %(name)s[%(process)d] %(levelname)s %(message)s"))
+logger.addHandler(file_handler)
 
 @bot.event
 async def on_ready():
@@ -24,20 +33,9 @@ async def on_ready():
  |  |-  |   |-| |\| | |    |  |-| |   |<  `-. 
  '  `-' `-' ' ` ' ` `-'    '  ` ' `-' ' ` `-'
 presents: """+Fore.RESET)
-    print(f"[AllDayChess] Logged in as {bot.user}")
+    logger.info(f"Logged in as {bot.user}")
     global startTime
     startTime=time.time()
 
-@bot.slash_command(description="Get stats about the bot!")
-async def ping(ctx):
-    await ctx.defer()
 
-    embed = discord.Embed(title=f"{bot.user.name} Stats", color=color)
-    embed.set_author(name="Pong 🏓", url="https://en.wikipedia.org/wiki/Network_delay")
-    embed.set_thumbnail(url="https://www.technotalks.net/static/main/images/alldaychess.gif")
-    embed.add_field(name="Ping", value=f"`{round(bot.latency*1000)}ms`")
-    embed.add_field(name="Uptime", value=f"`{datetime.timedelta(seconds=int(time.time()-startTime))}`")
-    embed.add_field(name="Version", value=f"`{version}`")
-    embed.add_field(name="RAM", value=f"`{bytes2human(process.memory_info().rss)}`")
-
-    await ctx.respond(embed=embed)
+bot.load_extension("src.extensions.general")
