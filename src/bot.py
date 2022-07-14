@@ -1,8 +1,9 @@
-import discord, time, psutil, sys, traceback, logging, coloredlogs
+import discord, time, psutil, sys, traceback, logging, coloredlogs, datetime
 from discord.ext import commands
 from colorama import Fore
 from psutil._common import bytes2human
 import src.utilities as utilities
+import src.extensions.general as general
 #create bot status
 status = discord.Activity(type=discord.ActivityType.watching, name=f"Coming Soon!")
 #intents
@@ -37,5 +38,22 @@ presents: """+Fore.RESET)
     global startTime
     startTime=time.time()
 
+    bot.add_view(general.General.rrmView())
+
 
 bot.load_extension("src.extensions.general")
+
+@bot.slash_command(description="Gives stats of the bot.")
+async def ping(ctx):
+    uptime = str(datetime.timedelta(seconds=int(round(time.time()-startTime))))
+    embed = discord.Embed(title=f"{bot.user.display_name} Stats", color=color)
+    embed.set_author(name="Pong! 🏓")
+    embed.add_field(name="Ping",value=f"`{round(bot.latency * 1000)}ms`",inline=True)
+    embed.add_field(name="Uptime", value=f"`{uptime}`", inline=True)
+    users = 0
+    for guild in bot.guilds:
+        users += guild.member_count
+    embed.add_field(name="Users", value=f"`{users}`", inline=True)
+    embed.add_field(name="Version", value=f"`{version}`", inline=True)
+    embed.add_field(name="RAM", value=f"`{bytes2human(process.memory_info().rss)} used`", inline=True)
+    await ctx.respond(embed=embed)
